@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supply Chain Social Performance — Session 5</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-elevated: #1a1a26;
+            --accent-red: #e63946;
+            --accent-amber: #f4a261;
+            --accent-teal: #2ec4b6;
+            --accent-blue: #457b9d;
+            --text-primary: #f1faee;
+            --text-secondary: #a8b2c1;
+            --text-muted: #5a6275;
+            --border: rgba(255,255,255,0.06);
+            --glass: rgba(255,255,255,0.03);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; scroll-snap-type: y mandatory; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===== NAV DOTS ===== */
+        .nav-dots {
+            position: fixed;
+            right: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .nav-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+        }
+        .nav-dot.active { background: var(--accent-red); transform: scale(1.4); }
+        .nav-dot:hover { background: var(--text-secondary); }
+
+        /* ===== FULLSCREEN & QR BUTTONS ===== */
+        .toolbar {
+            position: fixed;
+            top: 20px; right: 20px;
+            z-index: 200;
+            display: flex;
+            gap: 10px;
+        }
+        .toolbar-btn {
+            width: 42px; height: 42px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: rgba(10,10,15,0.85);
+            backdrop-filter: blur(12px);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s;
+            font-size: 18px;
+        }
+        .toolbar-btn:hover { background: var(--bg-elevated); color: white; border-color: rgba(255,255,255,0.15); }
+
+        /* QR Overlay */
+        .qr-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(16px);
+            z-index: 300;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .qr-overlay.visible { display: flex; }
+        .qr-box {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+        }
+        .qr-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .qr-close {
+            position: absolute;
+            top: 30px; right: 30px;
+            background: none; border: none;
+            color: white; font-size: 2rem;
+            cursor: pointer;
+        }
+
+        /* ===== SLIDES ===== */
+        .slide {
+            min-height: 100vh;
+            scroll-snap-align: start;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px clamp(24px, 5vw, 80px);
+        }
+
+        .slide-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--accent-red);
+            margin-bottom: 12px;
+        }
+
+        .slide-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 4.5vw, 3.5rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 8px;
+        }
+
+        .slide-subtitle {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+
+        /* ===== SLIDE 1 — NON-CONFORMITIES ===== */
+        .slide-1 {
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(230,57,70,0.06) 0%, transparent 60%),
+                var(--bg-dark);
+        }
+
+        .evidence-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            max-width: 1100px;
+        }
+
+        .evidence-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+        .evidence-card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.12); }
+
+        .evidence-card img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            display: block;
+            filter: brightness(0.9);
+        }
+
+        .evidence-body {
+            padding: 16px 18px;
+        }
+
+        .evidence-tag {
+            display: inline-block;
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 3px 10px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        .tag-forced { background: rgba(230,57,70,0.15); color: var(--accent-red); }
+        .tag-wages { background: rgba(244,162,97,0.15); color: var(--accent-amber); }
+        .tag-conditions { background: rgba(46,196,182,0.15); color: var(--accent-teal); }
+        .tag-legal { background: rgba(69,123,157,0.15); color: var(--accent-blue); }
+        .tag-advocacy { background: rgba(168,130,255,0.15); color: #a882ff; }
+
+        .evidence-body h3 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 4px;
+        }
+
+        .evidence-body p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .source-badge {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
+        /* ===== SLIDE 2 — THREE RISKS ===== */
+        .slide-2 {
+            background:
+                radial-gradient(ellipse at 80% 30%, rgba(244,162,97,0.06) 0%, transparent 60%),
+                var(--bg-dark);
+        }
+
+        .risks-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            max-width: 1100px;
+        }
+
+        .risk-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px 28px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+        .risk-card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.1); }
+
+        .risk-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+        }
+        .risk-card:nth-child(1)::before { background: var(--accent-red); }
+        .risk-card:nth-child(2)::before { background: var(--accent-amber); }
+        .risk-card:nth-child(3)::before { background: var(--accent-blue); }
+
+        .risk-number {
+            font-size: 3.5rem;
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+        .risk-card:nth-child(1) .risk-number { color: var(--accent-red); }
+        .risk-card:nth-child(2) .risk-number { color: var(--accent-amber); }
+        .risk-card:nth-child(3) .risk-number { color: var(--accent-blue); }
+
+        .risk-icon {
+            font-size: 2rem;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .risk-card h3 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        .risk-idea {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 14px;
+        }
+
+        .risk-consequence {
+            font-size: 0.8rem;
+            line-height: 1.5;
+            padding: 12px 14px;
+            border-radius: 8px;
+            border-left: 3px solid;
+        }
+        .risk-card:nth-child(1) .risk-consequence { background: rgba(230,57,70,0.06); border-color: var(--accent-red); color: #f4a0a8; }
+        .risk-card:nth-child(2) .risk-consequence { background: rgba(244,162,97,0.06); border-color: var(--accent-amber); color: #f4c89a; }
+        .risk-card:nth-child(3) .risk-consequence { background: rgba(69,123,157,0.06); border-color: var(--accent-blue); color: #8ab4cc; }
+
+        .risk-consequence strong {
+            display: block;
+            font-size: 0.65rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            opacity: 0.7;
+        }
+
+        /* ===== SLIDE 3 — ACTIONS ===== */
+        .slide-3 {
+            background:
+                radial-gradient(ellipse at 50% 80%, rgba(46,196,182,0.06) 0%, transparent 60%),
+                var(--bg-dark);
+        }
+
+        .actions-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+            max-width: 1000px;
+        }
+
+        .action-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 36px 32px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s;
+        }
+        .action-card:hover { transform: translateY(-4px); }
+
+        .action-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+        }
+        .action-card:nth-child(1)::before { background: linear-gradient(90deg, var(--accent-teal), var(--accent-blue)); }
+        .action-card:nth-child(2)::before { background: linear-gradient(90deg, var(--accent-amber), var(--accent-red)); }
+
+        .action-number {
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+        .action-card:nth-child(1) .action-number { color: var(--accent-teal); }
+        .action-card:nth-child(2) .action-number { color: var(--accent-amber); }
+
+        .action-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            margin-bottom: 14px;
+            line-height: 1.2;
+        }
+
+        .action-card p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 18px;
+        }
+
+        .action-steps {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .action-steps li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .step-icon {
+            flex-shrink: 0;
+            width: 22px; height: 22px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-top: 1px;
+        }
+        .action-card:nth-child(1) .step-icon { background: rgba(46,196,182,0.12); color: var(--accent-teal); }
+        .action-card:nth-child(2) .step-icon { background: rgba(244,162,97,0.12); color: var(--accent-amber); }
+
+        /* Diagram: flow between slides 2 and 3 */
+        .flow-diagram {
+            grid-column: span 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 24px 0 0;
+        }
+
+        .flow-node {
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .flow-node.problem { background: rgba(230,57,70,0.1); color: var(--accent-red); border: 1px solid rgba(230,57,70,0.2); }
+        .flow-node.arrow { background: none; color: var(--text-muted); font-size: 1.2rem; border: none; padding: 0; }
+        .flow-node.solution { background: rgba(46,196,182,0.1); color: var(--accent-teal); border: 1px solid rgba(46,196,182,0.2); }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            padding: 30px 40px;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            html { scroll-snap-type: none; }
+            .slide { min-height: auto; padding: 50px 20px; }
+            .nav-dots { display: none; }
+            .risks-container { grid-template-columns: 1fr; }
+            .actions-container { grid-template-columns: 1fr; }
+            .flow-diagram { grid-column: span 1; flex-wrap: wrap; }
+            .evidence-grid { grid-template-columns: 1fr; }
+            .toolbar { top: 12px; right: 12px; }
+        }
+
+        @media (max-width: 480px) {
+            .slide-title { font-size: 1.8rem; }
+            .risk-card { padding: 24px 20px; }
+            .action-card { padding: 28px 22px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOOLBAR: Fullscreen + QR -->
+    <div class="toolbar">
+        <button class="toolbar-btn" id="qrBtn" title="Show QR Code">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><line x1="21" y1="14" x2="21" y2="14.01"/><line x1="21" y1="21" x2="21" y2="21.01"/><line x1="17" y1="21" x2="17" y2="21.01"/><line x1="21" y1="17" x2="21" y2="17.01"/></svg>
+        </button>
+        <button class="toolbar-btn" id="fsBtn" title="Fullscreen">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+        </button>
+    </div>
+
+    <!-- QR Overlay -->
+    <div class="qr-overlay" id="qrOverlay">
+        <button class="qr-close" id="qrClose">&times;</button>
+        <div class="qr-box" id="qrCode"></div>
+        <p class="qr-label">Scan to view on your phone</p>
+    </div>
+
+    <!-- NAV DOTS -->
+    <nav class="nav-dots">
+        <button class="nav-dot active" data-slide="0" title="Non-Conformities"></button>
+        <button class="nav-dot" data-slide="1" title="Three Risks"></button>
+        <button class="nav-dot" data-slide="2" title="Actions"></button>
+    </nav>
+
+    <!-- ===== SLIDE 1 — NON-CONFORMITIES ===== -->
+    <section class="slide slide-1" id="slide-0">
+        <span class="slide-label">Slide 1 &mdash; Evidence from the Field</span>
+        <h1 class="slide-title">Non-Conformities<br>in Global Supply Chains</h1>
+        <p class="slide-subtitle">Key social violations documented in fashion and textile supply chains &mdash; from Xinjiang to Leicester.</p>
+
+        <div class="evidence-grid">
+            <div class="evidence-card">
+                <img src="forced-labor-uyghur.jpeg" alt="Suspected forced labor in Xinjiang">
+                <div class="evidence-body">
+                    <span class="evidence-tag tag-forced">Forced Labor</span>
+                    <h3>Uyghur Forced Labor in Xinjiang</h3>
+                    <p>Brands found complicit in suspected forced labor of Uyghurs in cotton and textile production in China's Xinjiang region.</p>
+                    <div class="source-badge">SOURCE: FRANCE 24 INVESTIGATION</div>
+                </div>
+            </div>
+
+            <div class="evidence-card">
+                <img src="garment-worker.jpeg" alt="Garment worker earning below minimum wage">
+                <div class="evidence-body">
+                    <span class="evidence-tag tag-wages">Sub-Minimum Wages</span>
+                    <h3>Workers Earned &lt; Half Minimum Wage</h3>
+                    <p>Garment workers were paid less than half the legal minimum wage and many were forced to work under exploitative conditions.</p>
+                    <div class="source-badge">SOURCE: FRANCE 24 INVESTIGATION</div>
+                </div>
+            </div>
+
+            <div class="evidence-card">
+                <img src="boohoo-campaign.jpeg" alt="Boohoo supply chain transparency campaign">
+                <div class="evidence-body">
+                    <span class="evidence-tag tag-conditions">Poor Conditions</span>
+                    <h3>Low Wages &amp; Poor Working Conditions</h3>
+                    <p>Workers pushed into accepting poverty wages and unsafe factory conditions. Campaigners demand supply chain transparency from fast fashion brands.</p>
+                    <div class="source-badge">SOURCE: FRANCE 24 / LABOUR BEHIND THE LABEL</div>
+                </div>
+            </div>
+
+            <div class="evidence-card">
+                <img src="dilnur-reyhan.jpeg" alt="Dilnur Reyhan, President of European Uyghur Institute">
+                <div class="evidence-body">
+                    <span class="evidence-tag tag-advocacy">Human Rights</span>
+                    <h3>Calls for Genocide Recognition</h3>
+                    <p>Dilnur Reyhan, President of the European Uyghur Institute, calls for official acknowledgment of the Uyghur genocide and corporate accountability.</p>
+                    <div class="source-badge">SOURCE: FRANCE 24</div>
+                </div>
+            </div>
+
+            <div class="evidence-card">
+                <img src="cbp-detention-order.jpeg" alt="US CBP detention order on Xinjiang cotton">
+                <div class="evidence-body">
+                    <span class="evidence-tag tag-legal">Government Action</span>
+                    <h3>US Bans Xinjiang Cotton Imports</h3>
+                    <p>US Customs &amp; Border Protection issued Withhold Release Orders on cotton and tomatoes from Xinjiang, citing evidence of forced/prison labor.</p>
+                    <div class="source-badge">SOURCE: CBP.GOV — DEC. 2020</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SLIDE 2 — THREE RISKS ===== -->
+    <section class="slide slide-2" id="slide-1">
+        <span class="slide-label">Slide 2 &mdash; Why Companies Should Care</span>
+        <h1 class="slide-title">Three Risks That Drive<br>Supplier Social Audits</h1>
+        <p class="slide-subtitle">Why companies take an active interest in the social performance of their supply chains.</p>
+
+        <div class="risks-container">
+            <div class="risk-card">
+                <div class="risk-number">01</div>
+                <span class="risk-icon">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#e63946" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                </span>
+                <h3>Protect Their Reputation</h3>
+                <p class="risk-idea">A brand is only as strong as its weakest link. If a supplier uses child labor or has unsafe factories, the public blames the buying company &mdash; not the supplier.</p>
+                <div class="risk-consequence">
+                    <strong>The Risk</strong>
+                    Negative media and social media backlash can destroy customer trust and loyalty overnight.
+                </div>
+            </div>
+
+            <div class="risk-card">
+                <div class="risk-number">02</div>
+                <span class="risk-icon">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#f4a261" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </span>
+                <h3>Ensure Stable Supply</h3>
+                <p class="risk-idea">Suppliers that treat workers well have happier, healthier, and more stable workforces &mdash; meaning reliable production.</p>
+                <div class="risk-consequence">
+                    <strong>The Risk</strong>
+                    High turnover, strikes, or factory shutdowns for safety violations lead to delays, shortages, and lost sales.
+                </div>
+            </div>
+
+            <div class="risk-card">
+                <div class="risk-number">03</div>
+                <span class="risk-icon">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#457b9d" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                </span>
+                <h3>Comply with Laws</h3>
+                <p class="risk-idea">Laws like the German Supply Chain Act and Modern Slavery Acts hold companies legally responsible for human rights violations in their supply chain.</p>
+                <div class="risk-consequence">
+                    <strong>The Risk</strong>
+                    Ignoring supplier misconduct can lead to massive government fines, court cases, and legal expenses.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SLIDE 3 — ACTIONS ===== -->
+    <section class="slide slide-3" id="slide-2">
+        <span class="slide-label">Slide 3 &mdash; What Can Be Done</span>
+        <h1 class="slide-title">Two Actions Companies<br>Can Take</h1>
+        <p class="slide-subtitle">Practical steps to manage and improve supplier social performance.</p>
+
+        <div class="actions-container">
+            <div class="action-card">
+                <div class="action-number">Action 01</div>
+                <h3>Conduct Social Audits &amp; Certifications</h3>
+                <p>Implement regular, independent third-party audits of suppliers using recognized standards like SA8000, BSCI, or Sedex/SMETA.</p>
+                <ul class="action-steps">
+                    <li><span class="step-icon">1</span> Map the full supply chain to identify high-risk tiers and regions</li>
+                    <li><span class="step-icon">2</span> Commission unannounced audits by independent bodies &mdash; not self-assessments</li>
+                    <li><span class="step-icon">3</span> Require corrective action plans with verified deadlines for non-conformities</li>
+                    <li><span class="step-icon">4</span> Publish audit results for transparency and stakeholder trust</li>
+                </ul>
+            </div>
+
+            <div class="action-card">
+                <div class="action-number">Action 02</div>
+                <h3>Build Long-Term Supplier Partnerships</h3>
+                <p>Move beyond policing to partnerships: invest in supplier development programs that raise social standards from within.</p>
+                <ul class="action-steps">
+                    <li><span class="step-icon">1</span> Co-fund training on worker rights, safety standards, and fair wages</li>
+                    <li><span class="step-icon">2</span> Establish worker grievance hotlines and anonymous reporting channels</li>
+                    <li><span class="step-icon">3</span> Commit to fair purchasing practices &mdash; avoid squeezing margins that force corners to be cut</li>
+                    <li><span class="step-icon">4</span> Reward top-performing suppliers with longer contracts and preferred status</li>
+                </ul>
+            </div>
+
+            <div class="flow-diagram">
+                <span class="flow-node problem">Non-Conformity Detected</span>
+                <span class="flow-node arrow">&rarr;</span>
+                <span class="flow-node problem">Risk Assessed</span>
+                <span class="flow-node arrow">&rarr;</span>
+                <span class="flow-node solution">Audit &amp; Certify</span>
+                <span class="flow-node arrow">&rarr;</span>
+                <span class="flow-node solution">Partner &amp; Develop</span>
+                <span class="flow-node arrow">&rarr;</span>
+                <span class="flow-node solution" style="background:rgba(46,196,182,0.2);">Sustainable Supply Chain</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        KEDGE Business School &middot; International Perspective on Sustainability Issues &middot; Session 5 &middot; Sources: France 24, CBP.gov, ILO, Labour Behind the Label
+    </footer>
+
+    <script>
+        // ===== NAV DOTS =====
+        const slides = document.querySelectorAll('.slide');
+        const dots = document.querySelectorAll('.nav-dot');
+
+        dots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                const idx = dot.dataset.slide;
+                document.getElementById('slide-' + idx).scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const idx = entry.target.id.replace('slide-', '');
+                    dots.forEach(d => d.classList.remove('active'));
+                    const activeDot = document.querySelector(`.nav-dot[data-slide="${idx}"]`);
+                    if (activeDot) activeDot.classList.add('active');
+                }
+            });
+        }, { threshold: 0.5 });
+
+        slides.forEach(s => observer.observe(s));
+
+        // ===== FULLSCREEN =====
+        document.getElementById('fsBtn').addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        // ===== QR CODE =====
+        const qrOverlay = document.getElementById('qrOverlay');
+        let qrGenerated = false;
+
+        document.getElementById('qrBtn').addEventListener('click', () => {
+            qrOverlay.classList.add('visible');
+            if (!qrGenerated) {
+                new QRCode(document.getElementById('qrCode'), {
+                    text: window.location.href,
+                    width: 200,
+                    height: 200,
+                    colorDark: '#0a0a0f',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+                qrGenerated = true;
+            }
+        });
+
+        document.getElementById('qrClose').addEventListener('click', () => {
+            qrOverlay.classList.remove('visible');
+        });
+
+        qrOverlay.addEventListener('click', (e) => {
+            if (e.target === qrOverlay) qrOverlay.classList.remove('visible');
+        });
+    </script>
+</body>
+</html>
