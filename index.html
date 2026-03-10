@@ -414,6 +414,79 @@
         .flow-node.arrow { background: none; color: var(--text-muted); font-size: 1.2rem; border: none; padding: 0; }
         .flow-node.solution { background: rgba(46,196,182,0.1); color: var(--accent-teal); border: 1px solid rgba(46,196,182,0.2); }
 
+        /* ===== TEAM SECTION ===== */
+        .team-section {
+            padding: 70px 40px;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+
+        .team-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--accent-teal);
+            margin-bottom: 10px;
+        }
+
+        .team-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 900;
+            margin-bottom: 32px;
+        }
+
+        .team-photo-wrap {
+            max-width: 480px;
+            margin: 0 auto 28px;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+        }
+
+        .team-photo-wrap img {
+            width: 100%;
+            display: block;
+            filter: brightness(0.95) contrast(1.05);
+        }
+
+        .team-names {
+            display: flex;
+            justify-content: center;
+            gap: 28px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        .team-name {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .team-divider {
+            width: 40px;
+            height: 2px;
+            background: var(--accent-teal);
+            margin: 0 auto 18px;
+            border-radius: 2px;
+        }
+
+        .team-credits {
+            font-size: 0.72rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            line-height: 2;
+        }
+
+        .team-credits strong {
+            color: var(--text-secondary);
+        }
+
         /* ===== FOOTER ===== */
         .footer {
             padding: 30px 40px;
@@ -619,6 +692,30 @@
                 <span class="flow-node solution" style="background:rgba(46,196,182,0.2);">Sustainable Supply Chain</span>
             </div>
         </div>
+    </section>
+
+    <!-- TEAM -->
+    <section class="team-section">
+        <p class="team-label">Prepared By</p>
+        <h2 class="team-title">Our Team</h2>
+
+        <div class="team-photo-wrap">
+            <img src="team-photo.jpeg" alt="Team photo">
+        </div>
+
+        <div class="team-names">
+            <span class="team-name">Bruno Briedis</span>
+            <span class="team-name">Gunta Briede</span>
+            <span class="team-name">Ksenija Samoilova</span>
+            <span class="team-name">Timofei Dort-Golts</span>
+        </div>
+
+        <div class="team-divider"></div>
+
+        <p class="team-credits">
+            <strong>KEDGE Business School</strong><br>
+            International Perspective on Sustainability Issues &middot; Session 5
+        </p>
     </section>
 
     <!-- FOOTER -->
